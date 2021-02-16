@@ -1,8 +1,8 @@
 ##############################################################################################
 ################# New script and folder for pHMM type analyses and tests #####################
 ##############################################################################################
-funcSrc.path <- "/src/utility/"
-funcSrc.list <- list.files(path=paste('.',funcSrc.path,sep=''))
+funcSrc.path <- "/src/"
+funcSrc.list <- list.files(path=paste('.',funcSrc.path,sep=''), recursive=T)
 sapply(funcSrc.list, function(i){source(paste('.',funcSrc.path,'/',i,sep=''))})
 #######################################################################################################
 nk = 5 #nr. of features
@@ -42,6 +42,17 @@ sds <- array(rep(sds, np), dim=c(nk, nm, np))
 # Draw participant mus from N(popmus, popmuvar)
 mus <- hierarchical.mu(popmus,popmuvar, np)
 #######################################################################################################
+# Generate a data set with tripartite PHMM characteristics
+data.list <- lapply(1:np, function(pp){PHMM.generate(nt=1200, pIdx=seq(80,1200,80), nk=nk, nm=nm, TPM=TPM, mus=mus[,,pp], initState=1)})
+X.list <- lapply(1:length(data.list), function(p){data.list[[p]]$X})
+
+# Get parameters into a vector for optimization
+params <- c(log(TPM[1]/(1-TPM[1])), log(TPM[2]/(1-TPM[2]-TPM[14])), log(TPM[3]/(1-TPM[3]-TPM[15])),
+            log(TPM[14]/(1-TPM[2]-TPM[14])), log(TPM[15]/(1-TPM[3]-TPM[15])), log(TPM[16]/(1-TPM[16])),
+            popmus, popmuvar, popsdvar, mus, sds)
+
+# Test likelihood computations
+ML.tripartite.PHMM.wrap(params, X.list, G=P.Gaus)
 
 
 
